@@ -106,7 +106,7 @@ module.exports.amIFirstNow = function(firstFunc, notFirstFunc, cb) {
   if (nextDate.getSeconds() === 0) { // You can check for seconds here too
     callEveryMinute()
   } else {
-    nextDate.setMinutes(d.getMinutes() + 1);
+    nextDate.setMinutes(nextDate.getMinutes() + 1);
     nextDate.setSeconds(0); // I wouldn't do milliseconds too ;)
 
     var difference = nextDate - new Date();
