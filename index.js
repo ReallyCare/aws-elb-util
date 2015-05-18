@@ -82,3 +82,35 @@ module.exports.amIFirst = function(cb) {
   });
 };
 
+module.exports.amIFirstNow = function(firstFunc, notFirstFunc, cb) {
+
+  function callEveryMinute() {
+    setInterval(function () {
+      module.exports.amIFirst(function (err, primary) {
+        if (err) {
+          throw new Error("Error callin amIFirst");
+        }
+        if (primary) {
+          if (typeof firstFunc === 'function') {
+            firstFunc();
+          }
+        } else if (typeof notFirstFunc === 'function') {
+          notFirstFunc();
+        }
+      });
+    }, 1000 * 60);
+  }
+
+  var nextDate = new Date();
+
+  if (nextDate.getSeconds() === 0) { // You can check for seconds here too
+    callEveryMinute()
+  } else {
+    nextDate.setMinutes(d.getMinutes() + 1);
+    nextDate.setSeconds(0); // I wouldn't do milliseconds too ;)
+
+    var difference = nextDate - new Date();
+    setTimeout(callEveryMinute, difference);
+  }
+
+};
