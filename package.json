@@ -1,0 +1,14 @@
+{
+  "name": "aws-elb-utils",
+  "version": "0.0.0",
+  "description": "Utilties for querying AWS ELB",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "Mark Chapman",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1.28"
+  }
+}
