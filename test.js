@@ -6,7 +6,7 @@ awsUtil.getInstanceId(function(err, instanceId) {
   assert.equal(typeof instanceId,'string');
 });
 
-awsUtil.configure('./../AWSconfig.js');
+awsUtil.configure('./../AWSConfig.js');
 
 awsUtil.getLoadBalancers({}, function(err, lbs) {
   assert.equal(err, null);
@@ -14,5 +14,7 @@ awsUtil.getLoadBalancers({}, function(err, lbs) {
 });
 
 awsUtil.amIFirst(function(err, response){
-  assert.equal(response, true);
+  assert.equal(response, true, 'I was expecting to be first on the load balancer');
 })
+
+console.log('If you can\'t see any horrible messages you are OK!');

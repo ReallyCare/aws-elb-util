@@ -1,6 +1,7 @@
 var http = require('http');
 var AWS = require('aws-sdk');
 
+var ec2;
 var elb;
 var instanceId;
 var configDone = false;
@@ -70,8 +71,17 @@ module.exports.amIFirst = function(cb) {
           instances.push(instanceObjects[j].InstanceId);
         }
         if (thisLB) {
-          instances.sort();
-          cb(null, (instances[0] === instance));
+          if (instances.length === 1) {
+            // I am the only instance - I must be primary
+            cb(null, true);
+          } else {
+            ec2 = ec2 || new AWS.EC2();
+            ec2.describeInstanceStatus({InstanceIds:instances}, function(err, data) {
+              if (err) cb(err);
+              data.InstanceStatuses.sort(function(a,b) {return a.InstanceId < b.InstanceId;});
+              cb(null, (data.InstanceStatuses[0].InstanceId === instance));
+            });
+          }
         }
       }
       if (!thisLB) {
