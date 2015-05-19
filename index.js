@@ -71,7 +71,6 @@ module.exports.amIFirst = function(cb) {
         }
         if (thisLB) {
           instances.sort();
-          console.log(instances[0] === instance);
           cb(null, (instances[0] === instance));
         }
       }
