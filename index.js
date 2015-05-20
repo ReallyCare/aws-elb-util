@@ -99,7 +99,7 @@ module.exports.amIFirstNow = function(firstFunc, notFirstFunc, cb) {
     setInterval(function () {
       module.exports.amIFirst(function (err, primary) {
         if (err) {
-          throw new Error("Error callin amIFirst");
+          throw new Error("Error callin amIFirst " + JSON.stringify(err));
         }
         if (primary) {
           if (state !== 1 && typeof firstFunc === 'function') {
