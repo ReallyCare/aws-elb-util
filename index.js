@@ -85,13 +85,14 @@ module.exports.amIFirst = function(cb) {
         }
       }
       if (!thisLB) {
-        cb(new Error('Could not find load balancer'));  
+        // we are not attached to a load balancer, so we can't be 'primary'
+        cb(null, false);
       }
     });
   });
 };
 
-module.exports.amIFirstNow = function(firstFunc, notFirstFunc, cb) {
+module.exports.amIFirstNow = function(firstFunc, notFirstFunc) {
 
   var state = 0;
 
