@@ -9,6 +9,7 @@
   "author": "Mark Chapman",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.1.28"
+    "aws-sdk": "^2.1.28",
+    "request": "^2.55.0"
   }
 }

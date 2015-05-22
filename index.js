@@ -1,4 +1,5 @@
-var request = require("request");
+var http = require('http');
+var request = require('request');   // massively heavy, but was struggling with timeout in http
 var AWS = require('aws-sdk');
 
 var ec2;
@@ -41,39 +42,18 @@ module.exports.onEC2 = function (cb) {
       method: "GET",
       timeout: 500
     }, function (error, response, body) {
-      if (error.code === 'ETIMEDOUT') {
-        instanceId = false;
-        cb(null, false);
+      if (error) {
+        if (error.code === 'ETIMEDOUT') {
+          instanceId = false;
+          cb(null, false);
+        } else {
+          cb(error);
+        }
       } else {
-        console.log(response, body);
-        instanceId = response;
+        instanceId = body;
         cb(null, instanceId);
       }
     });
-    //
-    //
-    //
-    //  var options = {host: '169.254.169.254', port: 80, path: '/latest/meta-data/instance-id'};
-    //
-    //  var req = http.request(options, function (res) {
-    //    res.on('data', function (chunk) {
-    //      instanceId = chunk.toString();
-    //      cb(null, instanceId);
-    //    }).on('error', function (e) {
-    //      console.log('here');
-    //      cb(e);
-    //    })
-    //  });
-    //  req.setTimeout(500, function () {
-    //    console.log('TIMED OUT');
-    //    instanceId = false;
-    //    req.abort();
-    //    cb(null, false);
-    //  });
-    //  req.end();
-    //} catch(e) {
-    //  console.log(e);
-    //}
   }
 };
 
@@ -139,7 +119,7 @@ module.exports.amIFirst = function (cb) {
           if (thisLB) {
             if (instances.length === 1) {
               // I am the only instance - I must be primary
-              cb(null, true);
+              cb(null, true, balancerName);
             } else {
               ec2 = ec2 || new AWS.EC2();
               ec2.describeInstanceStatus({InstanceIds: instances}, function (err, data) {
@@ -147,7 +127,7 @@ module.exports.amIFirst = function (cb) {
                 data.InstanceStatuses.sort(function (a, b) {
                   return a.InstanceId < b.InstanceId;
                 });
-                cb(null, (data.InstanceStatuses[0].InstanceId === instance), lbs[i]);
+                cb(null, (data.InstanceStatuses[0].InstanceId === instance), balancerName);
               });
             }
           }
