@@ -143,7 +143,7 @@ module.exports.amIFirst = function (cb) {
   });
 };
 
-module.exports.amIFirstNow = function (firstFunc, notFirstFunc) {
+module.exports.handlePromotionDemotion = function (firstFunc, notFirstFunc) {
 
   var state = 0;
 
