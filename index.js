@@ -1,4 +1,4 @@
-var http = require('http');
+var request = require("request");
 var AWS = require('aws-sdk');
 
 var ec2;
@@ -36,30 +36,44 @@ module.exports.onEC2 = function (cb) {
   if (instanceId) {
     cb(null, instanceId);
   } else {
-    var options = {host: '169.254.169.254', port: 80, path: '/latest/meta-data/instance-id'};
-
-    var req = http.request(options, function (res) {
-      res.on('data', function (chunk) {
-        instanceId = chunk.toString();
-        cb(null, instanceId);
-      }).on('error', function (e) {
-        console.log('here');
-        cb(e);
-      });
-    });
-
-    req.on('socket', function (socket) {
-      socket.setTimeout(500);
-      socket.on('timeout', function () {
+    request({
+      uri: 'http://169.254.169.254/latest/meta-data/instance-id',
+      method: "GET",
+      timeout: 500
+    }, function (error, response, body) {
+      if (error.code === 'ETIMEDOUT') {
         instanceId = false;
         cb(null, false);
-        req.abort();
-      }).on('error', function(err) {
-        console.log(err);
-      });
+      } else {
+        console.log(response, body);
+        instanceId = response;
+        cb(null, instanceId);
+      }
     });
-
-    req.end();
+    //
+    //
+    //
+    //  var options = {host: '169.254.169.254', port: 80, path: '/latest/meta-data/instance-id'};
+    //
+    //  var req = http.request(options, function (res) {
+    //    res.on('data', function (chunk) {
+    //      instanceId = chunk.toString();
+    //      cb(null, instanceId);
+    //    }).on('error', function (e) {
+    //      console.log('here');
+    //      cb(e);
+    //    })
+    //  });
+    //  req.setTimeout(500, function () {
+    //    console.log('TIMED OUT');
+    //    instanceId = false;
+    //    req.abort();
+    //    cb(null, false);
+    //  });
+    //  req.end();
+    //} catch(e) {
+    //  console.log(e);
+    //}
   }
 };
 
@@ -101,46 +115,51 @@ module.exports.getLoadBalancers = function (config, cb) {
 };
 
 module.exports.amIFirst = function (cb) {
-  module.exports.getInstanceId(function (err, instance) {
+  module.exports.onEC2(function (err, instance) {
     if (err) {
       cb(err);
     }
-    module.exports.getLoadBalancers({}, function (err, lbs) {
-      if (err) {
-        cb(err);
-      }
-      var thisLB = false;
-      for (var i = 0; i < lbs.length; i++) {
-        var instanceObjects = lbs[i].Instances;
-        var instances = [];
-        for (var j = 0; j < instanceObjects.length; j++) {
-          var thisInstance = instanceObjects[j].InstanceId;
-          if (thisInstance === instance) {
-            thisLB = true;
-          }
-          instances.push(instanceObjects[j].InstanceId);
+    if (instance) {
+      module.exports.getLoadBalancers({}, function (err, lbs) {
+        if (err) {
+          cb(err);
         }
-        if (thisLB) {
-          if (instances.length === 1) {
-            // I am the only instance - I must be primary
-            cb(null, true);
-          } else {
-            ec2 = ec2 || new AWS.EC2();
-            ec2.describeInstanceStatus({InstanceIds: instances}, function (err, data) {
-              if (err) cb(err);
-              data.InstanceStatuses.sort(function (a, b) {
-                return a.InstanceId < b.InstanceId;
+        var thisLB = false;
+        for (var i = 0; i < lbs.length; i++) {
+          var instanceObjects = lbs[i].Instances;
+          var balancerName = lbs[i].LoadBalancerName;
+          var instances = [];
+          for (var j = 0; j < instanceObjects.length; j++) {
+            var thisInstance = instanceObjects[j].InstanceId;
+            if (thisInstance === instance) {
+              thisLB = true;
+            }
+            instances.push(instanceObjects[j].InstanceId);
+          }
+          if (thisLB) {
+            if (instances.length === 1) {
+              // I am the only instance - I must be primary
+              cb(null, true);
+            } else {
+              ec2 = ec2 || new AWS.EC2();
+              ec2.describeInstanceStatus({InstanceIds: instances}, function (err, data) {
+                if (err) cb(err);
+                data.InstanceStatuses.sort(function (a, b) {
+                  return a.InstanceId < b.InstanceId;
+                });
+                cb(null, (data.InstanceStatuses[0].InstanceId === instance), lbs[i]);
               });
-              cb(null, (data.InstanceStatuses[0].InstanceId === instance));
-            });
+            }
           }
         }
-      }
-      if (!thisLB) {
-        // we are not attached to a load balancer, so we can't be 'primary'
-        cb(null, -1);
-      }
-    });
+        if (!thisLB) {
+          // we are not attached to a load balancer, so we can't be 'primary'
+          cb(null, -1);
+        }
+      });
+    } else {
+      cb(null, -2)
+    }
   });
 };
 
