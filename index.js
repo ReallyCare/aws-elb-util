@@ -138,7 +138,7 @@ module.exports.amIFirst = function (cb) {
       }
       if (!thisLB) {
         // we are not attached to a load balancer, so we can't be 'primary'
-        cb(null, false);
+        cb(null, -1);
       }
     });
   });

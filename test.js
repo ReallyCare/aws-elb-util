@@ -17,8 +17,10 @@ awsUtil.onEC2(function(err, onEC2) {
       assert(Array.isArray(lbs), 'getLoadBalancers should return an array');
     });
 
-    awsUtil.amIFirst(function(err, response){
-      assert.equal(response, true, 'I was expecting to be first on the load balancer');
+    awsUtil.amIFirst(function(err, primary, loadBalancer){
+      assert.equal(err, null);
+      console.log(loadBalancer ? ('We are on the load balancer ' + loadBalancer) : 'We are not being load balanced, so we will be seen as primary');
+      console.log(primary ? 'We are (or should be treated as) primary' : 'We are not the primary at the moment');
     });
     console.log('If you don\'t see any horrible messages and the process finishes you are OK!');
 
