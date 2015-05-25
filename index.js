@@ -43,7 +43,7 @@ module.exports.onEC2 = function (cb) {
       timeout: 500
     }, function (error, response, body) {
       if (error) {
-        if (error.code === 'ETIMEDOUT') {
+        if (['ESOCKETTIMEDOUT','ETIMEDOUT'].indexOf(error.code) !== -1 ) {
           instanceId = false;
           cb(null, false);
         } else {
