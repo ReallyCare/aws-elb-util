@@ -168,14 +168,13 @@ module.exports.handlePromotionDemotion = function (firstFunc, notFirstFunc) {
 
   var nextDate = new Date();
 
-  if (nextDate.getSeconds() === 0) { // You can check for seconds here too
+  if (nextDate.getSeconds() === 0) {
     callEveryMinute()
   } else {
     nextDate.setMinutes(nextDate.getMinutes() + 1);
-    nextDate.setSeconds(0); // I wouldn't do milliseconds too ;)
+    nextDate.setSeconds(0);
 
     var difference = nextDate - new Date();
-    console.log('Waiting for ' + difference);
     setTimeout(callEveryMinute, difference);
   }
 
